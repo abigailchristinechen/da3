@@ -8,6 +8,9 @@ prettydoc::html_pretty:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+# Clean environment
+rm(list=ls())
+
 # loading the libraries
 # Load packages
 library(tidyverse)
@@ -20,3 +23,31 @@ options(scipen=999)
 
 ```
 
+
+# Introduction
+
+For this assignment the goal is to use the parameters given in the dataset, [cps-earnings dataset](https://osf.io/g8p9j/), to build various kinds of predictive models using linear regression for hourly wage for **Editors**. The data is taken from Current Population Survey (CPS), which is a survey for the employment and labor markets. After data cleaning, parameters will be chosen with its relation to the parameter of interest. These will be tested in terms of (a) RMSE in the full sample, (b) BIC in the full sample and (c) cross-validated RMSE. Finally, then discussing the relationships between the different models and its performance.
+
+# Data Cleaning, EDA and Transformation (see details in Appendix)
+
+```{r, include=FALSE}
+## Loading the data from the web 
+
+df = read.csv( 'https://osf.io/4ay9x/download')
+
+## Check the data table
+glimpse(df)
+```
+
+
+## Selecting the Occupation 
+  
+  Selected: Editors; 2830
+
+```{r }
+##Selecting the Editors with code : 2830
+df = df[df$occ2012  == '2830' ,]
+
+## Check the data table
+glimpse(df)
+```

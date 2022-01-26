@@ -1,0 +1,22 @@
+---
+title: "DA3-A1"
+author: "Abigail Chen"
+prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# loading the libraries
+# Load packages
+library(tidyverse)
+library(caret) 
+library(ggplot2)
+library(forecast)
+library(flexmix)
+#preventing scientific notations
+options(scipen=999)
+
+```
+

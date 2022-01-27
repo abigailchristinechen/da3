@@ -343,7 +343,110 @@ summary(Anova_prcitshp)
 The prcitshp parameter will not used as predictor based on the results above.
 
 
+## Formulas
+
+```{r }
+
+Formula1 = as.formula(HourlyWage~age)
+Formula2 = as.formula(HourlyWage~age+race)
+Formula3 = as.formula(HourlyWage~age+race+grade92)
+Formula4 = as.formula(HourlyWage~age+race+grade92+sex+class)
+
+```
+
+## Training the model 
+
+```{r }
+Model1 = lm(Formula1,df)
+Model2 = lm(Formula2,df)
+Model3 = lm(Formula3,df)
+Model4 = lm(Formula4,df)
+
+```
+
+## RMSE Calculation 
+
+```{r, warning=FALSE}
+df$PredictM1 = predict(Model1,df)
+RMSE1 = accuracy(df$PredictM1,df$HourlyWage)[2]
+
+df$PredictM2 = predict(Model1,df)
+RMSE2 = accuracy(df$PredictM2,df$HourlyWage)[2]
+
+df$PredictM3 = predict(Model3,df)
+RMSE3 = accuracy(df$PredictM3,df$HourlyWage)[2]
+
+df$PredictM4 = predict(Model4,df)
+RMSE4 = accuracy(df$PredictM4,df$HourlyWage)[2]
+
+```
 
 
+## BIC results of each model
+
+```{r }
+Bic1 = BIC(Model1)
+Bic2 = BIC(Model2)
+Bic3 = BIC(Model3)
+Bic4 = BIC(Model4)
+
+```
+
+
+```{r }
+Results = data.frame(Model = c("Model 1","Model 2","Model 3","Model 4"),
+                     RMSE = c(RMSE1,RMSE2,RMSE3,RMSE4),
+                     BIC =c(Bic1,Bic2,Bic3,Bic4))
+
+Results
+```
+
+Based on RMSE, model4 is best. However, model1 has the lowest BIC so it could be used for predicting the hourly wage.
+
+## Cross-validation
+
+### cross fold validation with 5 folds
+
+```{r }
+
+train.control <- trainControl(method = "cv", number = 5)
+
+```
+
+
+
+## Model Training - Cross Validation
+
+```{r, warning=FALSE}
+ 
+
+Model11 <- train(Formula1, data = df, method = "lm",
+               trControl = train.control)
+
+Model22 <- train(Formula2, data = df, method = "lm",
+                 trControl = train.control)
+
+Model33 <- train(Formula3, data = df, method = "lm",
+                 trControl = train.control)
+
+Model44 <- train(Formula4, data = df, method = "lm",
+                 trControl = train.control)
+
+```
+
+
+
+```{r }
+
+RMSE = data.frame(Resample = c('Fold 1','Fold 2','Fold 3','Fold 4','Fold 5','Average'),
+                  Model1 = c(Model11$resample$RMSE,mean(Model11$resample$RMSE)),
+                  Model2 = c(Model22$resample$RMSE,mean(Model22$resample$RMSE)),
+                  Model3 = c(Model33$resample$RMSE,mean(Model33$resample$RMSE)),
+                  Model4 = c(Model44$resample$RMSE,mean(Model44$resample$RMSE))
+                  )
+RMSE
+```
+
+The cross validation shows that model2 has the lowest RMSE and it should be used for predicting the parameter of interest. 
 
 

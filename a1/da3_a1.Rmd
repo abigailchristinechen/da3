@@ -312,6 +312,37 @@ S## ignif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ 
 ```
 The Anova test above shows that there is relationship between the class parameter, and will be used a predictor.
 
+## Prcitshp
+
+```{r }
+unique(df$prcitshp)
+##Native, Born Abroad Of US Parent(s)"    "Native, Born In US"                    
+##[3] "Foreign Born, Not a US Citizen"         "Foreign Born, US Cit By Naturalization"
+```
+
+```{r }
+df$prcitshp = as.factor(df$prcitshp)
+```
+
+
+```{r }
+
+ggplot(df, aes(x = prcitshp, y = HourlyWage)) + 
+  geom_boxplot()
+
+```
+
+
+```{r }
+
+Anova_prcitshp <- aov(HourlyWage ~ prcitshp, data = df)
+
+summary(Anova_prcitshp)
+
+```
+The prcitshp parameter will not used as predictor based on the results above.
+
+
 
 
 

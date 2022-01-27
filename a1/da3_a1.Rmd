@@ -110,6 +110,43 @@ cor(df$HourlyWage, df$weight, method = 'pearson')
 Here, we can see using the pearson correlation that the weight has very low negative correlation to the hourly wage. 
 So, it will not be considered as a predictor parameter. 
 
+## Race 
+
+```{r }
+unique(df$race)
+
+```
+
+Converting the race variable to categorical variable.
+
+```{r }
+
+df$race = as.factor(df$race)
+
+```
+
+
+
+```{r }
+
+race_box <- ggplot(df, aes(x=race, y=HourlyWage)) + 
+  geom_boxplot()
+race_box
+```
+In the visualization, the box plot clearly show there is difference in hourly wage for the different races.
+
+
+```{r }
+## https://www.scribbr.com/statistics/anova-in-r/
+## since category
+Anova_Race <- aov(HourlyWage ~ race, data = df)
+
+summary(Anova_Race)
+
+```
+
+The Anova test confirms that there is difference of hourly wage on the basis of race. However, it is not very significant as the P value is greater than the usual threshold of 0.05. Nonetheless, race will be used as a predictor cause there is relation between hourly wage and race.
+
 
 
 

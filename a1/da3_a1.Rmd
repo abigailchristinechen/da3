@@ -18,8 +18,7 @@ library(caret)
 library(ggplot2)
 library(forecast)
 library(flexmix)
-library(ggstatsplot)
-install.packages('ggstatsplot')
+
 #preventing scientific notations
 options(scipen=999)
 
@@ -212,7 +211,7 @@ summary(Anova_Sex)
 ```
 For Sex, the Anova test confirms that there is a significant difference pay two sexes as p value is less than the usual threshold of 0.05. So sex parameter will be us
 
-## Martial
+## Marital
 
 ```{r }
 unique(df$marital)
@@ -308,7 +307,7 @@ summary(Anova_class)
 ## class         4   2952   738.0   2.157 0.0763 .
 ## Residuals   158  54061   342.2                 
 ## ---
-S## ignif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+## ignif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 ```
 The Anova test above shows that there is relationship between the class parameter, and will be used a predictor.
 

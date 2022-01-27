@@ -18,6 +18,8 @@ library(caret)
 library(ggplot2)
 library(forecast)
 library(flexmix)
+library(ggstatsplot)
+install.packages('ggstatsplot')
 #preventing scientific notations
 options(scipen=999)
 
@@ -39,15 +41,80 @@ df = read.csv( 'https://osf.io/4ay9x/download')
 glimpse(df)
 ```
 
-
-## Selecting the Occupation 
+## Selecting the occupation 
   
   Selected: Editors; 2830
 
 ```{r }
-##Selecting the Editors with code : 2830
+## Selecting the Editors with code : 2830
 df = df[df$occ2012  == '2830' ,]
 
 ## Check the data table
 glimpse(df)
 ```
+
+## Data Cleaning 
+
+## Check the structure of the data
+```{r }
+str(df)
+```
+
+## Parameters Selection
+Initial checking of various parameters to try based on intuition, to see which parameters can affect the wage.
+
+```{r }
+df = df[, c('weight','earnwke', 'uhours', 'race', 'age', 'sex', 'marital','grade92', 'state','class','prcitshp')]
+```
+
+## Creating variable of interest: Hourly Wage 
+
+```{r }
+df$HourlyWage = round(df$earnwke/df$uhours)
+```
+
+
+## Parameters Selection:
+Analyzing the different parameters initially chosen
+
+## Weight
+
+```{r }
+weight_summary <- summary(df$weight)
+weight_summary
+## Min. 1st Qu.  Median    Mean   3rd Qu.    Max. 
+## 222.1  1054.6  2769.5  2375.1  3427.1  7469.4 
+```
+
+
+```{r }
+## Check weight graph
+ ggplot(df, aes(x=weight, y=HourlyWage)) + geom_point()
+
+```
+
+Visualization shows a random spread.
+
+
+```{r }
+## Tried using Pearson Coefficient to see best fit for the various parameters
+## https://statistics.laerd.com/statistical-guides/pearson-correlation-coefficient-statistical-guide.php
+## https://libguides.library.kent.edu/spss/pearsoncorr
+## used the guideline here to interpret the Pearson's correlation coefficient
+## okay to try, since weight is continuous parameter
+## tried the code chunk from https://www.reneshbedre.com/blog/correlation-analysis-r.html
+cor(df$HourlyWage, df$weight, method = 'pearson')
+## -0.1220714
+```
+
+Here, we can see using the pearson correlation that the weight has very low negative correlation to the hourly wage. 
+So, it will not be considered as a predictor parameter. 
+
+
+
+
+
+
+
+
+

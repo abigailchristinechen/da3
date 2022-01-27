@@ -143,9 +143,140 @@ Anova_Race <- aov(HourlyWage ~ race, data = df)
 
 summary(Anova_Race)
 
+## Df Sum Sq Mean Sq F value Pr(>F)  
+## race          5   3252   650.3   1.899 0.0974 .
+## Residuals   157  53761   342.4                 
+## ---
+## Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
 ```
 
 The Anova test confirms that there is difference of hourly wage on the basis of race. However, it is not very significant as the P value is greater than the usual threshold of 0.05. Nonetheless, race will be used as a predictor cause there is relation between hourly wage and race.
+
+
+
+## Age
+
+```{r }
+age_summary <- summary(df$age)
+age_summary
+## Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   16.0    29.0    40.0    40.2    50.0    64.0 
+```
+
+
+```{r }
+age_plot <- ggplot(df, aes(x=age, y=HourlyWage)) + geom_point()
+age_plot
+```
+
+Looking at the age_plot, we can see that maybe there is a minor trend of increase in hourly wage with increase in age
+
+
+```{r }
+cor(df$HourlyWage, df$age, method = 'pearson')
+
+## [1] 0.3285981
+```
+
+Looking at the correlation test, we can see that there a light positive correlation, so we can keep this parameter.
+
+## Sex
+```{r }
+unique(df$sex)
+```
+
+Converting the race variable to categorical variable.
+```{r }
+df$sex = as.factor(df$sex)
+```
+
+
+```{r }
+ggplot(df, aes(x=sex, y=HourlyWage)) + 
+  geom_boxplot()
+```
+
+There eems to be difference in pay based on the sex
+
+```{r }
+
+Anova_Sex <- aov(HourlyWage ~ sex, data = df)
+summary(Anova_Sex)
+
+#3 #Df Sum Sq Mean Sq F value Pr(>F)  
+## sex           1   1846  1846.0   5.387 0.0215 *
+## Residuals   161  55167   342.6                 
+## ---
+##Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+```
+For Sex, the Anova test confirms that there is a significant difference pay two sexes as p value is less than the usual threshold of 0.05. So sex parameter will be us
+
+## Martial
+
+```{r }
+unique(df$marital)
+```
+
+Converting the marital variable to categorical variable.
+```{r }
+df$marital = as.factor(df$marital)
+```
+
+
+```{r }
+
+marital_box <- ggplot(df, aes(x = marital, y = HourlyWage)) + 
+  geom_boxplot()
+
+marital_box 
+```
+
+```{r }
+Anova_Marital<- aov(HourlyWage ~ marital, data = df)
+
+summary(Anova_Marital)
+
+##              Df Sum Sq Mean Sq F value Pr(>F)
+## marital       5   1275   254.9   0.718  0.611
+## Residuals   157  55738   355.0    
+
+```
+
+The Marital parameter has a large p-value so it will not be used as a predictor.
+
+## Grade
+
+```{r }
+unique(df$grade92)
+```
+
+Converting the grade variable to categorical variable.
+```{r }
+df$grade92 = as.factor(df$grade92)
+
+```
+
+
+```{r }
+grade_box <- ggplot(df, aes(x = grade92, y = HourlyWage)) + 
+  geom_boxplot()
+grade_box
+```
+
+In the grade_box plot, we can see the it seems like there's a good relationship. 
+
+```{r }
+Anova_grade92<- aov(HourlyWage ~ grade92, data = df)
+
+summary(Anova_grade92)
+
+## Df Sum Sq Mean Sq F value Pr(>F)  
+## grade92       9   7075   786.1   2.408 0.0139 *
+## Residuals   153  49938   326.4                 
+## Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+```
+The ANOVA test shows that hourly wage and grade92 have a significant relation. So grade92 parameter will be used as a predictor.
 
 
 

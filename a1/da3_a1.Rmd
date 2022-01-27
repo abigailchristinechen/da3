@@ -278,9 +278,39 @@ summary(Anova_grade92)
 ```
 The ANOVA test shows that hourly wage and grade92 have a significant relation. So grade92 parameter will be used as a predictor.
 
+## Class
+
+```{r }
+unique(df$class)
+## [1] "Private, For Profit"  "Private, Nonprofit"   "Government - Local"   "Government - Federal"
+## [5] "Government - State"  
+```
+
+Converting the class variable to categorical variable.
+```{r }
+df$class = as.factor(df$class)
+```
 
 
+```{r }
+class_box <- ggplot(df, aes(x = class, y = HourlyWage)) + 
+  geom_boxplot()
+class_box
+```
+The class_box plot showed that the there seems to be a relationship with this parameter
 
+```{r }
+Anova_class <- aov(HourlyWage ~ class, data = df)
+
+summary(Anova_class)
+
+## Df Sum Sq Mean Sq F value Pr(>F)  
+## class         4   2952   738.0   2.157 0.0763 .
+## Residuals   158  54061   342.2                 
+## ---
+S## ignif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+```
+The Anova test above shows that there is relationship between the class parameter, and will be used a predictor.
 
 
 

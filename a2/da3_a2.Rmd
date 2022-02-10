@@ -30,17 +30,7 @@ library(fixest)
 options(scipen=999)
 ```
 
-```{r, include=FALSE}
-## Loading the data from the web 
 
-df = read.csv('/Users/abigailchristinechen/da3/a2/Data/raw_data.csv')
-
-## Check the data table
-glimpse(df)
-
-## Check column names
-names(df)
-```
 
 
 

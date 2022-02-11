@@ -42,7 +42,519 @@ glimpse(df)
 names(df)
 ```
 
+```{r ,echo=FALSE, fig.show='hide'}
+## initial check of parameters
+glimpse(df)
+
+## Filter out all observations which are not that relevant
+## Remove "id" , "name" , "host_id" , "host_name", 'longitude', 'latitude','last_review'
+
+df = df[,c("price" , "neighbourhood_group" , "neighbourhood" , "minimum_nights",
+           'number_of_reviews', 'reviews_per_month','calculated_host_listings_count',
+           'availability_365','number_of_reviews_ltm','license','room_type')]
+```
+
+
+```{r ,echo=FALSE, fig.show='hide'}
+## Check data structure
+
+str(df)
+
+```
+
+```{r ,echo=FALSE, fig.show='hide'}
+## Fixing data types
+
+df$neighbourhood_group = as.factor(df$neighbourhood_group)
+
+df$neighbourhood = as.factor(df$neighbourhood )
+
+df$room_type = as.factor(df$room_type )
+
+## Converting license to a binary category:
+
+df$license[df$license != ''] = 1
+
+df$license[df$license == ''] = 0
+
+df$license = as.factor(df$license )
+
+## Checking the data summary
+
+summary(df)
+```
+
+```{r ,echo=FALSE, fig.show='hide'}
+## Removing NA's
+
+summary(df)
+## Started with 24,294 observations
+## There are 4964 NAs in reviews_per_month
+## Since the number of missing reviews per month is very large, we will drop them
+
+df = na.omit(df)
+
+## Ended up with 19,330 observations, still above the 10,000 requirement
+```
+
+```{r ,echo=FALSE, fig.show='hide'}
+## Analyze price
+
+summary(df$price)
+
+## Visualize the distribution of price using histogram
+
+f1<-ggplot(df, aes(x=price)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth=100) +
+  ggtitle( "Figure 1: Price Distribution" )
+
+f1
+## plot shows some outliers
+```
 
 
 
+```{r ,echo=FALSE, fig.show='hide'}
+## Creating ln_price 
+
+df$ln_price = ln(df$price)
+
+f2 <- ggplot(df, aes(x=ln_price)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan") +
+  ggtitle( "Figure 2: ln_price" )
+
+f2 
+
+## ln has turned it into a normal distribution
+
+## Remove the outliers
+
+df <- subset(df, ln_price>3 & ln_price<9 )
+
+f2<- ggplot(df, aes(x=ln_price)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan") +
+  ggtitle( "Figure 2: ln_price" )
+
+f2
+```
+ 
+```{r ,echo=FALSE, fig.show='hide'}
+## Analyzing Minimum Nights
+
+summary(df$minimum_nights)
+
+
+f3 <- ggplot(df, aes(x=minimum_nights)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle( "Figure 3: Minimum Nights Distribution" )
+  
+
+## Removing observations with minimum nights above 10 
+
+df1 <- subset(df, minimum_nights<9)
+
+f3 <- ggplot(df1, aes(x=minimum_nights)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+ ggtitle( "Figure 3: Minimum Nights Distribution" )
+
+## Change Minimum night 
+
+df1$minimum_nights = as.factor(df1$minimum_nights)
+
+f4 <-ggplot(df1, aes(x=minimum_nights, y=ln_price)) +
+  geom_boxplot() +
+   ggtitle( "Figure 4: Minimum Nights  vs. ln_price" )
+
+ANOVAln_price_minimum_nights <- aov(ln_price ~ minimum_nights, data = df1)
+
+summary(ANOVAln_price_minimum_nights)
+
+df = df1
+## Price seems to increase with increase in minimum night
+## Checking plot and anova test
+
+```
+
+```{r ,echo=FALSE, fig.show='hide'}
+## Analyzing number_of_reviews
+
+summary(df$number_of_reviews)
+
+f5 <- ggplot(df, aes(x=number_of_reviews)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle( "Figure 5: # of Reviews Distribution" )
+
+f5
+
+df1 <- subset(df, number_of_reviews<150)
+
+f5 <- ggplot(df1, aes(x=number_of_reviews )) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle( "Figure 5: # of Reviews Distribution" )
+
+f6 <- ggplot(df1, aes(x=number_of_reviews, y=ln_price)) +
+  geom_point() +
+  ggtitle( "Figure 6: # of Reviews vs ln_price" ) 
+
+f6
+## The number_of_reviews don't seem to play any role in determining the ln_price
+```
+
+```{r ,echo=FALSE, fig.show='hide'}
+## Checking Reviews per month
+
+summary(df$reviews_per_month)
+
+f7 <- ggplot(df, aes(x=reviews_per_month)) + 
+      geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+      ggtitle( "Figure 7: Reviews per month Distribution" )
+f7 
+df1 <- subset(df, reviews_per_month < 9)
+
+f7 <- ggplot(df1, aes(x=reviews_per_month)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle( "Figure 7: Reviews per month Distribution" )
+f7
+
+f8 <- ggplot(df1, aes(x=reviews_per_month, y=ln_price)) +
+      geom_point() +
+      ggtitle( "Figure 8: Review / month vs ln_price" ) 
+
+## Looks like it doesn't play any role in determining the ln_price
+```
+
+```{r ,echo=FALSE, fig.show='hide'}
+## Calculated_host_listings_count
+
+summary(df$calculated_host_listings_count)
+
+f9 <- ggplot(df, aes(x=calculated_host_listings_count)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1 ) +
+  ggtitle( "Figure 9: Calculated Host Listings Count Distribution" )
+
+
+## df1 <- subset(df, calculated_host_listings_count > 1 &calculated_host_listings_count < 7)
+## for 2 to 6 guests
+df1 <- subset(df, calculated_host_listings_count > 1 &calculated_host_listings_count < 7)
+
+f9 <- ggplot(df1, aes(x=calculated_host_listings_count)) + 
+      geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+      ggtitle( "Figure 9: Calculated Host Listings Count Distribution" )
+f9
+f10 <- ggplot(df1, aes(x=calculated_host_listings_count, y=ln_price)) +
+      geom_point() +
+      ggtitle( "Figure 10: Calculated Host Listings Count vs ln_price" )
+f10
+## dont seem to play any role in determining the ln_price
+```
+
+```{r ,echo=FALSE, fig.show='hide'}
+## Checking Availability_365
+
+summary(df$availability_365)
+
+f11 <- ggplot(df, aes(x=availability_365)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1 ) +
+  ggtitle( "Figure 11: Availability_365 Distribution" )
+
+f11
+
+f12 <- ggplot(df, aes(x=availability_365, y=ln_price)) +
+       geom_point() +
+       ggtitle( "Figure 12: Availability_365 Distribution vs Ln_price" )
+f12
+
+## dont seem to play any role in determining the ln_price
+```
+
+```{r ,echo=FALSE, fig.show='hide'}
+## Checking for number of reviews 
+summary(df$number_of_reviews_ltm)
+
+f13 <- ggplot(df, aes(x=number_of_reviews_ltm)) + 
+       geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+       ggtitle( "Figure 13: Number of Reviews Distribution" )
+
+df1 <- subset(df, number_of_reviews_ltm < 100)
+
+f13 <- ggplot(df1, aes(x=number_of_reviews_ltm)) + 
+       geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+       ggtitle( "Figure 13: Number of Reviews Distribution" )
+
+f14 <- ggplot(df1, aes(x=number_of_reviews_ltm, y=ln_price)) +
+       geom_point() +
+       ggtitle( "Figure 14: Number of Reviews Distribution vs Ln_price" )
+
+## dont seem to play any role in determining the ln_price
+```
+
+```{r ,echo=FALSE, fig.show='hide'}
+## Checking for Neighborhood_group
+summary(df$neighbourhood_group)
+
+f15 <- ggplot(df, aes(x=neighbourhood_group, y=ln_price, color = neighbourhood_group)) +
+       geom_boxplot() +
+        ggtitle( "Figure 15: Neighbourhood Group Distribution vs Ln_price" )
+
+f15
+
+## There seems to be difference in prices based on the neighbourhood_group 
+##  Honolulu has least and Maui has the highest 
+
+ANOVAln_price_neighbourhood_group <- aov(ln_price ~ neighbourhood_group, data = df)
+
+summary(ANOVAln_price_neighbourhood_group)
+
+## Significant differences in ln_prices based on neighbourhood_group can be seen
+```
+
+```{r ,echo=FALSE, fig.show='hide'}
+## Checking for License
+summary(df$license)
+
+f16 <- ggplot(df, aes(x=license, y=ln_price)) +
+       geom_boxplot() +
+       ggtitle("Figure 16: License vs ln_price")
+
+f16
+## There is no difference
+## So will not be used for modelling
+```
+
+````{r ,echo=FALSE, fig.show='hide'}
+## Analyzing Room Type
+summary(df$room_type)
+
+f17 <- ggplot(df, aes(x=room_type, y=ln_price, color = room_type)) +
+       geom_boxplot() +
+       ggtitle("Figure 17: Room Type")
+f17
+
+ANOVAln_price_room_type <- aov(ln_price ~ room_type, data = df)
+
+summary(ANOVAln_price_room_type)
+
+
+## room_type : Entire home/apt has highest, followed by Hotel Rooms, Private Rooms and shared room as the lowest 
+## anova test also shows that different room types have different affect on ln_price
+```
+
+````{r ,echo=FALSE, fig.show='hide'}
+summary(df)
+
+str(df)
+
+names(df)
+```
+
+
+````{r ,echo=FALSE, fig.show='hide'}
+summary(df)
+## Check numeric independent variables with price
+
+## Check list of the categorical data
+
+categoricalList = names(df %>% select(where(is.factor)) %>% glimpse())
+
+## Get list of the non categorical data
+## Either numeric or int
+
+numericList = names(df)[!names(df) %in% categoricalList] 
+
+cor(df[ ,numericList])
+
+## hence none of the numeric parameters are good enough for modeling
+```
+
+````{r ,echo=FALSE, fig.show='hide'}
+## Train Test data division 80-20: create a holdout set (20% of observations)
+## Utilize the Working data set:
+## a) estimate measures on the whole working sample (R2,BIC,RMSE)
+##b) DO K-fold cross validation to get proper Test RMSE
+## Do everything within a for-loop
+
+## Define seed value
+set.seed(100)
+n = nrow(df)
+trainIndex = sample(1:n, size = round(0.8*n), replace=FALSE)
+train = df[trainIndex ,]
+test = df[-trainIndex ,]
+
+## Formulas
+Formula1 = as.formula(ln_price~room_type)
+Formula2 = as.formula(ln_price~neighbourhood_group)
+Formula3 = as.formula(ln_price~minimum_nights)
+
+Formula4 = as.formula(ln_price~room_type+neighbourhood_group)
+Formula5 = as.formula(ln_price~room_type+minimum_nights)
+Formula6 = as.formula(ln_price~neighbourhood_group+minimum_nights)
+
+Formula7 = as.formula(ln_price~neighbourhood_group+minimum_nights+room_type)
+
+FormulaList = c(Formula1,Formula2,Formula3,Formula4,Formula5,Formula6,Formula7)
+
+i = 1
+## Do the iteration
+
+## Linear modeling 
+
+
+Results = data.frame()
+TestDataAccuracyAlldata = data.frame()
+TestDataAccuracyAlldataK = data.frame()
+
+for ( i in 1:7 ){
+  
+  formula <- as.formula( unlist( FormulaList[[i]] ))
+  
+  ## running the model on entire data set 
+  model_work_data <- feols( formula , data = train , vcov='hetero' )
+  
+  
+  fs  <- fitstat(model_work_data,c('rmse','r2','bic'))
+  BIC <- fs$bic
+  r2  <- fs$r2
+  rmse_train <- fs$rmse
+  ncoeff <- length( model_work_data$coefficients )
+  
+  ## Do the k-fold cross validation with 5 folds
+  ## 5 folds
+  
+  cv_i <- train( formula, train, method = "lm", 
+                 trControl = trainControl(method = "cv", number = 5))
+  
+  rmse_k <- mean( cv_i$resample$RMSE )
+  
+  ## Save the results
+  TempResults = data.frame(Model = paste("Model",i),
+                           Formula = as.character(( FormulaList[i] )),
+                           Coefficients=ncoeff,
+                           R_squared=r2,
+                           BIC = BIC,
+                           RMSE_Train = rmse_train,
+                           RMSE_K_Fold = rmse_k
+  )
+  
+  ## External Validity
+  ## Trying LM Robust Model performance on test data
+  ## Trying Model performance on test data
+  
+  test$PredictM1R = predict(model_work_data,test)
+  ACCR = accuracy(test$PredictM1R,test$ln_price)
+  
+  TempTestDataAccuracyAlldata = data.frame(Model = c(paste('Model',i)),
+                                           ME = c(ACCR[1]),
+                                           RMSE = c(ACCR[2]),
+                                           MAE = c(ACCR[3]),
+                                           MPE = c(ACCR[4]),
+                                           MAPE = c(ACCR[5])
+  )
+  
+  test$PredictM1R = predict(cv_i,test)
+  ACCR = accuracy(test$PredictM1R,test$ln_price)
+  
+  TempTestDataAccuracyAlldataK = data.frame(Model = c(paste('Model_K',i)),
+                                            ME = c(ACCR[1]),
+                                            RMSE = c(ACCR[2]),
+                                            MAE = c(ACCR[3]),
+                                            MPE = c(ACCR[4]),
+                                            MAPE = c(ACCR[5])
+  )
+  
+  TestDataAccuracyAlldata = rbind(TestDataAccuracyAlldata ,TempTestDataAccuracyAlldata )
+  TestDataAccuracyAlldataK = rbind(TestDataAccuracyAlldataK ,TempTestDataAccuracyAlldataK )
+  
+  Results = rbind(Results,TempResults)
+}
+
+```
+
+````{r ,echo=FALSE, fig.show='hide'}
+# Check summary table
+Results
+TestDataAccuracyAlldata
+TestDataAccuracyAlldataK
+
+TestResults = rbind(TestDataAccuracyAlldata,TestDataAccuracyAlldataK)
+
+## bic results
+
+ggplot(Results, aes(x=Model, y=BIC, group=1)) +
+  geom_line(color="red",linetype = "dashed")+
+  geom_point()
+
+
+
+## RMSE_Train results
+
+ggplot(Results, aes(x=Model, y=RMSE_Train, group=1)) +
+  geom_line(color="red",linetype = "dashed")+
+  geom_point()
+
+
+## RMSE_K_Fold results
+
+ggplot(Results, aes(x=Model, y=RMSE_K_Fold, group=1)) +
+  geom_line(color="red",linetype = "dashed")+
+  geom_point()
+
+
+
+
+# 3) Use of LASSO
+
+
+
+# Set lasso tuning parameters:
+
+# a) basic setup
+train_control <- trainControl( method = "cv", number = 5)
+
+# b) tell the actual lambda (penalty parameter) to use for lasso
+tune_grid     <- expand.grid("alpha" = c(1), "lambda" = seq(0.05, 1, by = 0.05))
+
+
+
+# Run LASSO
+
+lasso_model <- train(ln_price ~.,
+                     data = train,
+                     method = "glmnet",
+                     preProcess = c("center", "scale"),
+                     trControl = trainControl( method = "cv", number = 5),
+                     tuneGrid = tune_grid,
+                     na.action=na.exclude)
+
+
+# One can get the coefficients as well
+lasso_coeffs <- coef(lasso_model$finalModel, lasso_model$bestTune$lambda) %>%
+  as.matrix() %>%
+as.data.frame() %>% 
+  rownames_to_column(var = "variable") %>%
+  rename(coefficient = `s1`)  # the column has a name "1", to be renamed
+
+
+# Check the number of variables which actually has coefficients other than 0
+lasso_coeffs_nz<-lasso_coeffs %>%
+  filter(coefficient!=0)
+
+
+# Get the RMSE of the Lasso model 
+#   Note you should compare this to the test RMSE
+lasso_fitstats <- lasso_model$results %>%
+  filter(lambda == lasso_model$bestTune$lambda) 
+lasso_fitstats
+
+# Create an auxilary tibble
+lasso_add <- data.frame(Model='LASSO', Coefficients=nrow(lasso_coeffs_nz),
+                        Formula = "ln_price ~.",
+                        R_squared=lasso_fitstats$Rsquared, BIC = NA, 
+                        RMSE_Train = NA, RMSE_K_Fold = lasso_fitstats$RMSE )
+
+# Add it to final results
+Results <- rbind( Results , lasso_add )
+
+Results
+
+```
 

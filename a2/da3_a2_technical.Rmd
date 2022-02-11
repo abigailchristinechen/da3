@@ -369,3 +369,78 @@ ggplot(df1, aes(x=calculated_host_listings_count, y=ln_price, color = calculated
   geom_point() +
   ggtitle("Figure 11: Calculated Host Listings vs ln_price")
 ```
+
+
+## Analyzing availability_365 
+The median is 213, while the 3rd quartile 278 and the max is 365.
+This parameter also doesn't seem to affect the ln_price. 
+```{r , echo=TRUE}
+summary(df$availability_365)
+```
+
+
+```{r , echo=TRUE}
+ggplot(df, aes(x=availability_365, y=ln_price)) +
+  geom_point() +
+  ggtitle("Figure 12: Availability_365 vs ln_price")
+```
+## Analyzing number_of_reviews_ltm 
+With the summary we can see the 3rd quartile being 15, and the max number at 388.
+This shows that there are outliers. There also seems to be no relation with this parameter.
+```{r , echo=TRUE}
+summary(df$number_of_reviews_ltm)
+```
+
+
+```{r , echo=TRUE}
+ggplot(df, aes(x=number_of_reviews_ltm)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle("Figure 13: number_of_reviews_ltm Distribution ")
+
+```
+
+
+```{r , echo=TRUE}
+df1 <- subset(df, number_of_reviews_ltm < 100)
+```
+
+
+```{r , echo=TRUE}
+
+ggplot(df1, aes(x=number_of_reviews_ltm)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle("Figure 13: number_of_reviews_ltm Distribution ")
+```
+
+
+```{r , echo=TRUE}
+ggplot(df1, aes(x=number_of_reviews_ltm, y=ln_price)) +
+  geom_point() +
+  ggtitle("Figure 14: number_of_reviews_ltm vs ln_price")
+```
+
+## Analyzing neighbourhood_group
+There are 4 neighboring groups : Hawaii, Honolulu, Kauai, and Maui.  Maui has the most observations, while Kauai with the least.
+There seems to be difference in prices based on  neighbourhood_group: Honolulu has least and Kauai has the highest 
+Thers is a significant difference in ln_prices based on neighbourhood_group.
+```{r , echo=TRUE}
+
+summary(df$neighbourhood_group)
+
+```
+
+```{r , echo=TRUE}
+
+ggplot(df, aes(x=neighbourhood_group, y=ln_price, color = neighbourhood_group)) +
+  geom_boxplot() + 
+  ggtitle("Figure 15: neighbourhood_group vs ln_price)")
+```
+
+
+```{r , echo=TRUE}
+
+ANOVAln_price_neighbourhood_group <- aov(ln_price ~ neighbourhood_group, data = df)
+
+summary(ANOVAln_price_neighbourhood_group)
+
+```

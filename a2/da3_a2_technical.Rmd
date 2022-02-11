@@ -1,0 +1,223 @@
+---
+title: "da3-a2-detailed"
+author: "Abigail Chen"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(fixest)
+library(ggplot2)
+library( tidyverse)
+library( dplyr )
+library( kableExtra )
+library( modelsummary )
+library( DataExplorer )
+library( lspline )
+library( huxtable )
+library( ggthemes )
+library( estimatr )
+library(forecast)
+library(tidyverse)
+library('caret')
+library('SciViews')
+library('forecast' )
+library(kableExtra)
+options(scipen=999)
+df <- read.csv("/Users/abigailchristinechen/da3/a2/Data/raw_data.csv")
+```
+
+## Research Question
+
+The task is to help a company operating small and mid-size apartments hosting 2-6 guests. The company is set to price their new apartments not on the market and the task is to help them make business decisions. The goal is to help them build a price prediction model.
+
+## Introduction
+  
+This project is a linear regression analysis on data about Airbnb rentals in Hawaii, USA.  The dataset is taken from **Inside Airbnb Website** (http://insideairbnb.com/get-the-data.html). The relationship between price and room type, neighborhood along with other parameters will be used.  The raw dataset has 24,294 observations.
+
+
+## Exploratory Data Analysis
+
+First, the structure of the data was analysed.  Then the various data types were changed to categorical from character format. The price had outliers and its distribution was right skewed. The "ln" was used and outliers were also removed from the list.  So, for modeling our dependent variable was ln_price.
+
+### Variables Selection
+Below is the list of shortlisted variables and the reasons behind their selection
+
+1. **ln_price**:  This is our dependent variable.  
+
+2. **room_type**: Entire home/apt has highest and shared room has lowest, tried using anova test to show that different room types have differnt affect on ln_price.
+
+3. **neighbourhood_group**: Significant difference in ln_prices were seen based on neighbourhood_group, Honolulu has least and Maui has the highest  
+
+4. **minimum_nights**: The price seems to increase with increase in minimum nights , plot and anova test proves it. 
+
+
+## Main model Linear Regression : lm
+
+## Formulas for seven lm models
+
+$$lnPrices=\beta_0+\beta_1(roomtype) $$
+$$lnPrices=\beta_0+\beta_1(neighbourhoodGroup) $$
+$$lnPrices=\beta_0+\beta_1(minimumNights) $$
+
+
+
+$$lnPrices=\beta_0+\beta_1(roomtype)+\beta_2(neighbourhoodGroup) $$
+
+$$lnPrices=\beta_0+\beta_1(roomtype)+\beta_2(minimumNights) $$
+
+$$lnPrices=\beta_0+\beta_1(neighbourhoodGroup)+\beta_2(minimumNights) $$
+
+
+$$lnPrices=\beta_0+\beta_1(minimumNights)+\beta_2(minimumNights)+\beta_3(roomtype) $$
+
+
+## External Validity
+
+The data set was divided randomly into train and test in 80-20 percent ratio. 
+
+
+## Alternative model: LASSO
+
+Lasso regression is a classification algorithm that uses shrinkage in simple and sparse models(i.e model with fewer parameters). In Shrinkage, data values are shrunk towards a central point like the mean. Lasso regression is a regularized regression algorithm that performs L1 regularization which adds penalty equal to the absolute value of the magnitude of coefficients.
+
+“LASSO” stands for Least Absolute Shrinkage and Selection Operator. Lasso regression is good for models showing high levels of multicollinearity or when you want to automate certain parts of model selection i.e variable selection or parameter elimination."
+so formula ln_price ~. we dont need preprocess and feature selaction. results of the Lasso model were not better but were close to Model 7 .  Additional **source**(https://www.geeksforgeeks.org/lasso-regression-in-r-programming/).
+
+
+
+## Conclusion
+
+ Ideally, lower RMSE and higher R-squared values are indicative of a good model.In conclusion, we can say that gender influences Bonus of a person..... rlm didnt show much differnce mix performance good in some bad in others ... 
+
+
+## **APPENDIX**
+
+# Data Cleaning
+
+## Looking at column names 
+
+```{r , echo=TRUE}
+names(df)
+```
+
+
+## Initial Check:  
+
+Removing the data we don't need. We dont need to look at : "id" , "name" , "host_id" , "host_name", 'longitude', 'latitude','last_review'.
+
+```{r , echo=TRUE}
+df = df[,c("price" , "neighbourhood_group" , "neighbourhood" , "minimum_nights",
+           'number_of_reviews', 'reviews_per_month','calculated_host_listings_count',
+           'availability_365','number_of_reviews_ltm','license','room_type')]
+names(df)
+```
+
+
+## Looking at the structure 
+
+```{r , echo=TRUE}
+str(df)
+```
+
+
+## Fixing data types
+
+```{r , echo=TRUE}
+
+df$neighbourhood_group = as.factor(df$neighbourhood_group)
+
+df$neighbourhood = as.factor(df$neighbourhood )
+
+df$room_type = as.factor(df$room_type )
+
+str(df)
+
+```
+
+
+## License :
+changing licence to binary category, assuming missing ones do not have a licensce
+
+```{r , echo=TRUE}
+
+df$license[df$license != ''] = 1
+
+df$license[df$license == ''] = 0
+
+df$license = as.factor(df$license )
+
+summary(df$license)
+
+```
+
+
+## Summary of the data
+
+```{r , echo=TRUE}
+summary(df)
+```
+
+
+there are 4964 NAs in "reviews per month" since the number of missing reviews per month is very large we will drop them from our data
+
+
+
+```{r , echo=TRUE}
+df = na.omit(df)
+```
+
+## Analyzing Price 
+
+```{r , echo=TRUE}
+summary(df$price)
+
+```
+
+shows huge difference between 3rd quartile and max value
+
+### Visualizing the distribution of price:histogram
+
+```{r , echo=TRUE}
+ggplot(df, aes(x=price)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan",binwidth=100) +
+  ggtitle( "Figure 1: Price Distribution" )
+
+```
+
+Checking for outliers in the data.
+
+
+### Taking ln of price 
+
+```{r , echo=TRUE, error=FALSE,warning=FALSE}
+
+df$ln_price = ln(df$price)
+
+ggplot(df, aes(x=ln_price)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan",bins = 30) +
+   ggtitle( "Figure 2: ln_price" )
+```
+
+ln has turned it into a normal distribution
+
+### removing the outliers
+```{r , echo=TRUE}
+
+df <- subset(df, ln_price>3 & ln_price<9 )
+
+ggplot(df, aes(x=ln_price)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan",bins = 30) +
+   ggtitle( "Figure 2: ln_price" )
+
+```
+
+ln_price will be used for analysis instead of price. 
+
+## Analyzing minimum_nights 
+
+```{r , echo=TRUE}
+
+summary(df$minimum_nights)
+
+```

@@ -6,6 +6,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+#loading the libraries
 library(fixest)
 library(ggplot2)
 library( tidyverse)
@@ -95,7 +96,8 @@ so formula ln_price ~. we dont need preprocess and feature selaction. results of
 
 # Data Cleaning
 
-## Looking at column names 
+## Looking at column names
+There are 18 columns initially 
 
 ```{r , echo=TRUE}
 names(df)
@@ -122,6 +124,7 @@ str(df)
 
 
 ## Fixing data types
+Converting to factor format
 
 ```{r , echo=TRUE}
 
@@ -137,7 +140,7 @@ str(df)
 
 
 ## License :
-changing licence to binary category, assuming missing ones do not have a licensce
+Changing license to binary category, assuming missing ones do not have a license.
 
 ```{r , echo=TRUE}
 
@@ -158,23 +161,20 @@ summary(df$license)
 summary(df)
 ```
 
-
-there are 4964 NAs in "reviews per month" since the number of missing reviews per month is very large we will drop them from our data
-
-
+There are 4964 NAs in "reviews per month" since the number of missing reviews per month is very large, we will drop them from our data.
 
 ```{r , echo=TRUE}
 df = na.omit(df)
 ```
 
 ## Analyzing Price 
+The median price is \$245 while the median is \$447.3
 
 ```{r , echo=TRUE}
 summary(df$price)
 
 ```
-
-shows huge difference between 3rd quartile and max value
+Here we can see a huge difference between 3rd quartile and max value.
 
 ### Visualizing the distribution of price:histogram
 
@@ -201,7 +201,8 @@ ggplot(df, aes(x=ln_price)) +
 
 ln has turned it into a normal distribution
 
-### removing the outliers
+## removing the outliers
+The new number of observations is now 24,197.
 ```{r , echo=TRUE}
 
 df <- subset(df, ln_price>3 & ln_price<9 )
@@ -215,9 +216,156 @@ ggplot(df, aes(x=ln_price)) +
 ln_price will be used for analysis instead of price. 
 
 ## Analyzing minimum_nights 
+The median number of nigths is 3 and the mean is 6.4.  
 
 ```{r , echo=TRUE}
 
 summary(df$minimum_nights)
 
+```
+
+### Histogram 
+
+```{r , echo=TRUE}
+
+ggplot(df, aes(x=minimum_nights)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle( "Figure 3: Minimum Nights Distribution" )
+
+```
+Removing observations with minimum nights above 10 nights.
+
+```{r , echo=TRUE}
+
+df1 <- subset(df, minimum_nights<9)
+
+ggplot(df1, aes(x=minimum_nights)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle( "Figure 3: Minimum Nights Distribution Updated" )
+```
+
+```{r , echo=TRUE}
+## minimum night looks like a category 
+## changing the data type
+
+df1$minimum_nights = as.factor(df1$minimum_nights)
+
+ggplot(df1, aes(x=minimum_nights, y=ln_price, color = minimum_nights)) +
+  geom_boxplot() +
+  ggtitle("Figure 4 : Minimum Nights")
+```
+The price seems to increase with increase in minimum nights , plot and anova test shows it.
+```{r , echo=TRUE}
+ANOVAln_price_minimum_nights <- aov(ln_price ~ minimum_nights, data = df1)
+
+summary(ANOVAln_price_minimum_nights)
+
+df = df1
+
+```
+
+## Analyzing number_of_reviews 
+The max reviews is 878, while the mean is 29 reviews. The 3rd quartile is just 33. 
+There is a significant differnce in 3rd quartile and max hence outliers must be present.
+```{r , echo=TRUE}
+summary(df$number_of_reviews)
+```
+
+### Histogram
+Trying to remove values greater than 150.
+The new number of observations is now 20,836.
+
+```{r , echo=TRUE}
+ggplot(df, aes(x=number_of_reviews)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle("Figure 5 : Number of Reviews")
+
+```
+
+```{r , echo=TRUE}
+df1 <- subset(df, number_of_reviews<150)
+```
+
+
+
+```{r , echo=TRUE}
+ggplot(df1, aes(x=number_of_reviews)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle("Figure 6: Number of Reviews")
+```
+
+
+### Scatter Plot: ln_Price vs number_of_reviews
+The number_of_reviews don't seem to play any role in determining the ln_price. So it will not be used.
+
+```{r , echo=TRUE}
+ggplot(df1, aes(x=number_of_reviews, y=ln_price)) +
+  geom_point() +
+  ggtitle("Figure 7 :ln_Price vs number_of_reviews ")
+```
+
+##Analyzing reviews_per_month 
+The Max reviews is 21, while the 3rd quartile is 1.7 reviews. 
+This doesn't seem to be related to the ln_price.
+```{r , echo=TRUE}
+summary(df$reviews_per_month)
+```
+
+```{r , echo=TRUE}
+ggplot(df, aes(x=reviews_per_month, color = eviews_per_month )) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle("Figure 8 :Reviews per month distribution")
+
+```
+
+```{r , echo=TRUE}
+
+df1 <- subset(df, reviews_per_month < 9)
+
+ggplot(df1, aes(x=reviews_per_month)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle("Figure 8 :Reviews per month distribution")
+```
+
+
+
+```{r , echo=TRUE}
+ggplot(df1, aes(x=reviews_per_month, y=ln_price)) +
+  geom_point() +
+  ggtitle("Figure 9 :Reviews per month vs ln_price")
+```
+
+
+## Analyzing calculated_host_listings_count 
+The Max listings 439, while the 3rd quartile is 94 and the mean is 67. 
+This also doesn't seem play any role in determining the ln_price.
+```{r , echo=TRUE}
+summary(df$calculated_host_listings_count)
+```
+
+
+```{r , echo=TRUE}
+
+ggplot(df, aes(x=calculated_host_listings_count)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1)+
+  ggtitle("Figure 10: Calculated Host Listings Distribution")
+```
+
+
+```{r , echo=TRUE}
+# df1 <- subset(df, calculated_host_listings_count > 1 &calculated_host_listings_count < 7)
+df1 <- subset(df, calculated_host_listings_count > 1 &calculated_host_listings_count < 7)
+
+```
+
+```{r , echo=TRUE}
+ggplot(df1, aes(x=calculated_host_listings_count)) + 
+  geom_histogram(color="darkcyan", fill="darkcyan", binwidth = 1) +
+  ggtitle("Figure 10: Calculated Host Listings Distribution")
+```
+
+```{r , echo=TRUE}
+ggplot(df1, aes(x=calculated_host_listings_count, y=ln_price, color = calculated_host_listings_count)) +
+  geom_point() +
+  ggtitle("Figure 11: Calculated Host Listings vs ln_price")
 ```

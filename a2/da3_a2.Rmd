@@ -285,7 +285,7 @@ f14 <- ggplot(df1, aes(x=number_of_reviews_ltm, y=ln_price)) +
        geom_point() +
        ggtitle( "Figure 14: Number of Reviews Distribution vs Ln_price" )
 
-## dont seem to play any role in determining the ln_price
+## Doesn't seem to play any role in determining the ln_price
 ```
 
 ```{r ,echo=FALSE, fig.show='hide'}
@@ -318,7 +318,7 @@ f16 <- ggplot(df, aes(x=license, y=ln_price)) +
 
 f16
 ## There is no difference
-## So will not be used for modelling
+## Will not be used for modelling
 ```
 
 ````{r ,echo=FALSE, fig.show='hide'}
@@ -503,16 +503,14 @@ ggplot(Results, aes(x=Model, y=RMSE_K_Fold, group=1)) +
 
 # 3) Use of LASSO
 
-
-
 # Set lasso tuning parameters:
 
 # a) basic setup
+## based on the k_folds
 train_control <- trainControl( method = "cv", number = 5)
 
 # b) tell the actual lambda (penalty parameter) to use for lasso
 tune_grid     <- expand.grid("alpha" = c(1), "lambda" = seq(0.05, 1, by = 0.05))
-
 
 
 # Run LASSO

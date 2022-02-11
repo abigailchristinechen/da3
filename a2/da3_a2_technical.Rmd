@@ -1,7 +1,9 @@
 ---
 title: "da3-a2-detailed"
 author: "Abigail Chen"
-output: html_document
+prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
 ---
 
 ```{r setup, include=FALSE}
@@ -732,7 +734,7 @@ Model 7 has the lowest BIC so it should be used
 ggplot(Results, aes(x=Model, y=RMSE_Train, group=1)) +
   geom_line(color="red",linetype = "dashed")+
   geom_point() + 
-  ggtitle("Results: Models vs RMSE Train)
+  ggtitle("Results: Models vs RMSE Train")
 ```
 
 

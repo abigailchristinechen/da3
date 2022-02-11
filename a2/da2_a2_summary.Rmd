@@ -1,0 +1,114 @@
+---
+title: "da3-a2-summary"
+author: "Abigail Chen"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(fixest)
+library(ggplot2)
+library( tidyverse)
+library( dplyr )
+library( kableExtra )
+library( modelsummary )
+library( DataExplorer )
+library( lspline )
+library( huxtable )
+library( ggthemes )
+library( estimatr )
+library(forecast)
+library(tidyverse)
+library('caret')
+library('SciViews')
+library('forecast' )
+library(kableExtra)
+options(scipen=999)
+```
+
+## Research Question
+
+The task is to help a company operating small and mid-size apartments hosting 2-6 guests. The company is set to price their new apartments not on the market and the task is to help them make business decisions. The goal is to help them build a price prediction model.
+  
+## Introduction
+  
+This project is a linear regression analysis on data about Airbnb rentals in Hawaii, USA.  The dataset is taken from **Inside Airbnb Website** (http://insideairbnb.com/get-the-data.html). The relationship between price and room type, neighborhood along with other parameters will be used.  The raw dataset has 24,294 observations.
+
+## Exploratory Data Analysis
+
+First, the structure of the data was analysed.  Then the various data types were changed to categorical from character format. The price had outliers and its distribution was right skewed. The "ln" was used and outliers were also removed from the list.  So, for modeling our dependent variable was ln_price.
+
+### Variables Selection
+
+Below is the list of shortlisted variables and the reasons behind their selection
+
+1. **ln_price**:  This is our dependent variable.  
+
+2. **room_type**: Entire home/apt has highest and shared room has lowest, tried using anova test to show that different room types have differnt affect on ln_price.
+
+3. **neighbourhood_group**: Significant difference in ln_prices were seen based on neighbourhood_group, Honolulu has least and Maui has the highest  
+
+4. **minimum_nights**: The price seems to increase with increase in minimum nights , plot and anova test proves it. 
+
+
+## Main model Linear Regression : lm
+
+### Formulas for seven lm models
+
+$$lnPrices=\beta_0+\beta_1(roomtype) $$
+$$lnPrices=\beta_0+\beta_1(neighbourhoodGroup) $$
+$$lnPrices=\beta_0+\beta_1(minimumNights) $$
+
+
+
+$$lnPrices=\beta_0+\beta_1(roomtype)+\beta_2(neighbourhoodGroup) $$
+
+$$lnPrices=\beta_0+\beta_1(roomtype)+\beta_2(minimumNights) $$
+
+$$lnPrices=\beta_0+\beta_1(neighbourhoodGroup)+\beta_2(minimumNights) $$
+
+
+$$lnPrices=\beta_0+\beta_1(minimumNights)+\beta_2(minimumNights)+\beta_3(roomtype) $$
+
+
+## External Validity
+
+The data set was divided randomly into train and test in 80-20 percent ratio. 
+
+
+## Alternative model: LASSO
+
+Lasso regression is a classification algorithm that uses shrinkage in simple and sparse models(i.e model with fewer parameters). In Shrinkage, data values are shrunk towards a central point like the mean. Lasso regression is a regularized regression algorithm that performs L1 regularization which adds penalty equal to the absolute value of the magnitude of coefficients.
+
+“LASSO” stands for Least Absolute Shrinkage and Selection Operator. Lasso regression is good for models showing high levels of multicollinearity or when you want to automate certain parts of model selection i.e variable selection or parameter elimination."
+so formula ln_price ~. we dont need preprocess and feature selaction. results of the Lasso model were not better but were close to Model 7.  Sources looked into: https://www.geeksforgeeks.org/lasso-regression-in-r-programming/
+
+
+### below are the results of models on train data
+
+```{r , echo=FALSE}
+table = read.csv('Results.csv')
+
+kable(table, 
+      "latex", booktabs = TRUE, 
+      caption = 'Models performance on train data') %>% kable_styling(latex_options = c("hold_position","scale_down"), font_size = 2)
+```
+
+### Below are the results of models on test data
+
+```{r , echo=FALSE}
+
+table = read.csv('TestData.csv')
+
+kable(table, 
+      "latex", booktabs = TRUE, 
+      caption = 'Models performance on train data') %>% kable_styling(latex_options = c("hold_position","scale_down"), font_size = 2)
+```
+
+## Conclusion
+
+Ideally, lower RMSE and higher R-squared values are indicative of a good model. BIC and RMSE show that model 7 is best. 
+LASSO did well but not better than model 7. Model 7 performs better on test data as well.
+
+

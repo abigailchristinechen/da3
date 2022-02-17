@@ -36,7 +36,7 @@ getwd()
 #Setting the directory----------------------------------------------------------
 dir <- "/Users/abigailchristinechen/da3/a3/"
 
-source("https://raw.githubusercontent.com/abigailchristinechen/da3/main/da_helper_functions.R")
+source("https://raw.githubusercontent.com/abigailchristinechen/da3/ab3aaa4cfc2edcf099d4b97f778c7626d6d72eee/a3/data_cleaner.R")
 
 #Assigning the directories 
 data_in <- paste0(dir,"data/raw/")

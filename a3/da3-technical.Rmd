@@ -22,7 +22,9 @@ For this case study, we used 7 different models including OLS, LASSO, Random For
 To classify firms in the mentioned categories, a loss function which quantifies the consequences of the decisions that are driven by the prediction was required (Gabors, 2021). The loss function has two values, one is a loss due to the false negative and a loss due to the false positive. For this purpose we considered these features of the companies and build 7 different models which are OLS, LASSO, Random Forest and OLS Logit. The data comes from the Bisnode, a company that offers decision support in forms of digital business, marketing and credit information. 
 
 
-## Check This ->Add a summary like this 
+## Summary 
+
+We had to use various models, such as random forest, lasso, logit and ols. The best model was chosen to be 
 
 We used 7 different models including OLS, LASSO, Random Forest and OLS logit. As result of the above model the best selected model was Model 3 with RMSE of 0.361 and AUC was 0.6576 and the average expected loss was 0.3076. Moreover, we the best selected model for both services and Manufacture where we received the following results. The main aim of the project is to choose a prediction model which assists the decision makers on their investment in a company. Moreover, we also checked the selected our model performance for manufacturing and service industries. For the manufacturing industry the RMSE was 0.3771520, AUC was 0.6413224 and average expected loss was 0.3338673. For the service industry the RMSE is 0.344, AUC is	0.691 and the expected loss is	0.273
 
@@ -51,6 +53,7 @@ library(Hmisc)
 library(kableExtra)
 library(lspline)
 library(margins)
+library(ggplot2)
 library(modelsummary)
 library(partykit)
 library(pROC)
@@ -61,6 +64,7 @@ library(rpart)
 library(rpart.plot)
 library(sandwich)
 library(skimr)
+library(ggthemes)
 library(viridis)
 ```
 
@@ -72,7 +76,7 @@ getwd()
 dir <- "/Users/abigailchristinechen/da3/a3/"
 
 source("/Users/abigailchristinechen/da3/a3/da_helper_functions.R")
-
+source("/Users/abigailchristinechen/da3/theme_bg.R")
 #Assigning the directories 
 data_in <- paste0(dir,"data/raw/")
 data_out <- paste0(dir,"data/clean/")
@@ -222,13 +226,14 @@ data <- data %>%
 
 This histogram shows that the distribution of sales is skewed to the right.
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
 ggplot(data=data, aes(x=sales_mil)) +
   geom_histogram(aes(y = (..count..)/sum(..count..)), binwidth = 0.1,
                  color = "black", fill = "darkcyan") +
   coord_cartesian(xlim = c(0, 5)) +
-  labs(x = "sales in million",y = "Percent") +
-  ggtitle("Distribution of Sales") +
-  theme_wsj() + scale_colour_wsj("colors6")
+  labs(x = "sales in million",y = "Percent", title = "Distribution of Sales")+
+  theme_wsj() 
+
 ```
 
 While this histogram shows a normal distribtuion for the log of sales.
@@ -544,6 +549,7 @@ getwd()
 ################################################################################
 
 source("/Users/abigailchristinechen/da3/a3/da_helper_functions.R")
+source("/Users/abigailchristinechen/da3/theme_bg.R")
 
 path <-  "/Users/abigailchristinechen/da3/a3/"
 data_in <- paste0(path,"data/clean/")
@@ -872,25 +878,7 @@ logit_summary1
 ```
 
 ## Random Forest
-The last model we created is the probabiloty Random Forest, where we will be using the set of variables from the random forest modelling. The variables we will be using are the raw variables, firm variables and HR variables. The result from the Random Forest shows that the probability random forest 
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-rf_summary
-```
-The result from the Random Forest indicates that (probability) Random Forest outperforms other models such as LASSO and probability logit by around -0.001 RMSE and the AUC result  is higher than the both mentioned model 3 and LASSO logit. As a result the Random Forest based on the RMSE and AUC result is the best performing model. Thus, we use our holdout set to draw ROC curve.
-
-
-
-### ROC Curve
-
-What is the ROC curve? It  can graphically show the trade-off between the false positive and false negative when we use various classification thresholds to the probability predictions.  We will then we using this for our selected model.  
-
-
- Thus, we draw the ROC curve for the selected model which is the Rnadom Forest. Below are the two versions of the ROC curve. The ROC curve points for the various thresholds show the values between 0.05 and 0.75 by steps of 0.025. The mentioned curve also utilizes color coding to show the approximate values of the related threshold, as of the moment the point are not shown. The below curve on the below right is similar to common ROC curve. The main important point in this curve is it fill in for the threshold values, however it does not have any points to indicate the threshold values. Based on the result from our best model of Random Forest its AUC is 0.67. A higher threshold means fewer false positive or fewer true positive, on the other hand, a lower threshold indicates more true positive and more false positive. Thus, by looking to the below curves, we require to set a threshold, for which we need to create the loss function. 
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-roc_obj_holdout
-```
+The last model we created is the probabiloty Random Forest, where we will be using the set of variables from the random forest modelling. The variables we will be using are the raw variables, firm variables and HR variables. 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 #Estimate RMSE on holdout sample
@@ -965,7 +953,7 @@ tpr_fpr_for_thresholds <- tibble("threshold" = thresholds,
                                  "false_positive_rate" = false_positive_rates)
 
 #Plot discrete ROC
-discrete_roc_plot <- ggplot(
+ggplot(
   data = tpr_fpr_for_thresholds,
   aes(x = false_positive_rate, y = true_positive_rate, color = threshold)) +
   labs(x = "False positive rate (1 - Specificity)", y = "True positive rate (Sensitivity)") +
@@ -973,20 +961,20 @@ discrete_roc_plot <- ggplot(
   scale_color_viridis(option = "D", direction = -1) +
   scale_x_continuous(expand = c(0.01,0.01), limit=c(0,1), breaks = seq(0,1,0.1)) +
   scale_y_continuous(expand = c(0.01,0.01), limit=c(0,1), breaks = seq(0,1,0.1)) +
-  theme_wsj() + scale_colour_wsj("colors6") +
+  theme_bw() +
   theme(legend.position ="right") +
   theme(legend.title = element_text(size = 4), 
         legend.text = element_text(size = 4),
         legend.key.size = unit(.4, "cm")) 
 
-#discrete_roc_plot
+
 
 
 # Or with a fairly easy commands, we can plot, the
 # continuous ROC on holdout with Logit 4########################################
 roc_obj_holdout <- roc(data_holdout$fast_growth, data_holdout$best_logit_no_loss_pred, quiet = T)
 # use aux function
-#createRocPlot(roc_obj_holdout, "best_logit_no_loss_roc_plot_holdout")
+createRocPlot(roc_obj_holdout, "best_logit_no_loss_roc_plot_holdout")
 
 # and quantify the AUC (Area Under the (ROC) Curve)
 roc_obj_holdout$auc
@@ -1064,15 +1052,15 @@ logit_summary2
 
 # Create plots based on Fold5 in CV#############################################
 # 
-# for (model_name in names(logit_cv_rocs)) {
-#   
-#   r <- logit_cv_rocs[[model_name]]
-#   best_coords <- logit_cv_threshold[[model_name]]
-#   createLossPlot(r, best_coords,
-#                  paste0(model_name, "_loss_plot"))
-#   createRocPlotWithOptimal(r, best_coords,
-#                            paste0(model_name, "_roc_plot"))
-# }
+for (model_name in names(logit_cv_rocs)) {
+
+  r <- logit_cv_rocs[[model_name]]
+  best_coords <- logit_cv_threshold[[model_name]]
+  createLossPlot(r, best_coords,
+                 paste0(model_name, "_loss_plot"))
+  createRocPlotWithOptimal(r, best_coords,
+                           paste0(model_name, "_roc_plot"))
+}
 
 
 # Pick best model based on average expected loss ----------------------------------
@@ -1087,11 +1075,11 @@ r <- logit_cv_rocs[["X4"]]
 # get coordinates and properties of the choosen threshold
 best_coords <- logit_cv_threshold[["X4"]]
 # plot for Loss function
-#createLossPlot(r, best_coords,
- #              paste0("X4", "_loss_plot"))
+createLossPlot(r, best_coords,
+               paste0("X4", "_loss_plot"))
 # Plot for optimal ROC
-#createRocPlotWithOptimal(r, best_coords,
-#                         paste0("X4", "_roc_plot"))
+createRocPlotWithOptimal(r, best_coords,
+                         paste0("X4", "_roc_plot"))
 
 # Predict the probabilities on holdout
 logit_predicted_probabilities_holdout <- predict(best_logit_with_loss, newdata = data_holdout, type = "prob")
@@ -1136,7 +1124,7 @@ rf_for_graph <-
   )
 
 rpart.plot(rf_for_graph, tweak=1, digits=2, extra=107, under = TRUE)
-#save_tree_plot(rf_for_graph, "tree_plot", output, "small", tweak=1)
+save_tree_plot(rf_for_graph, "tree_plot", output, "small", tweak=1)
 
 #############
 
@@ -1269,6 +1257,22 @@ rf_summary
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
+rf_summary
+```
+
+
+### ROC Curve
+
+What is the ROC curve? It  can graphically show the trade-off between the false positive and false negative when we use various classification thresholds to the probability predictions.  We will then we using this for our selected model.  
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+roc_obj_holdout
+```
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 rf_summary 
 ```
 
@@ -1277,16 +1281,13 @@ rf_summary
 
 Lastly we will look for the loss function. This give value to the consequences of decisions that are driven by prediction models. A loss function can have two values, from the false negative and the false positive. This will help us in decision making. We need to get the threshold value for the classification which will give the smallest loss. 
 
-$$optimal-classification-threshold = \frac{loss(FP)}{loss(FP) + loss(FN)}$$
-
-
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 ###
 # Create plots - this is for Fold5
 
-#createLossPlot(roc_obj, best_threshold, "rf_p_loss_plot")
-#createRocPlotWithOptimal(roc_obj, best_threshold, "rf_p_roc_plot")
+createLossPlot(roc_obj, best_threshold, "rf_p_loss_plot")
+createRocPlotWithOptimal(roc_obj, best_threshold, "rf_p_roc_plot")
 
 
 #Take model to holdout and estimate RMSE, AUC and expected loss
@@ -1348,7 +1349,7 @@ summary_results <- data.frame("Number of predictors" = unlist(nvars),
 model_names <- c("Logit X1", "Logit X2","Logit X3","Logit X4",
                  "Logit LASSO","RF probability")
 summary_results <- summary_results %>%
-  filter(rownames(.) %in% c("X1", "X2","X3","X4", "LASSO", "rf_p"))
+  filter(rownames(.) %in% c("X1", "X2","X3n","X4", "LASSO", "rf_p"))
 rownames(summary_results) <- model_names
 
 summary_results
@@ -1359,20 +1360,12 @@ summary_results
 ```
 
 ## Best Model based on Expected Loss
-Here we can see that the Random Forest has the lowest expected loss and RMSE, compared to the other modells.  
-As a result of we can say that Random Forest has the lowest expected loss and RMSE, compared to Logit LASSO, logit Model 3 and logit Model 1. However, logit Model has the similar performance. The expected loss from Model 3 is same as Random forest which is around 0.30764. The RMSE is different by 0.0006 which is a very small number. The reason behind this decision is logit Model 3 is easily interpretative compared to the Random Forest which is black box model.
+Here we can see that the Random Forest has the lowest expected loss and RMSE, compared to the other models.  Random forest also has the lowest expected loss. 
+
 
 # Model Evaluation and Confusion Matrix
 
 As we have chosen our best model, we can evaluate the result. As a result we can say that we correctly predicted 83% of the firms. he The accuracy of the model is 83% the model classified correctly 83% of the firms. The specificity of the model is 97% which indicates that from not fast growing firms the model correctly estimated 97%. The sensitivity of the model is 11% which means the model predicted the fast growing firms by 11%. 
-
-
-
-## Summary 
-The final model which was chosen for this case study was Model 3 which has the variable of firm details and engine variables which are firm financial information of balance sheet and profit and loss. The The accuracy of the model is 83% the model classified correctly 83% of the firms. The specificity of the model is 97% which indicates that from not fast growing firms the model correctly estimated 97%. The sensitivity of the model is 11% which means the model predicted the fast growing firms. The result is a helpful tool for the firms to predict which firms are fast and non fast growing. Moreover, we compared across industry result considering the same single loss function and carrying out the exercise for different industries. All result were predicted based on the logit model 3. The performance of whole data and all models were evaluated.
-
-
-
 
 
 

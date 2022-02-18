@@ -340,7 +340,7 @@ summary(logit_class_prediction)
 
 # Confusion matrix: summarize different type of errors and successfully predicted cases
 # positive = "yes": explicitly specify the positive case
-cm_object1 <- confusionMatrix(logit_class_prediction, data_holdout$default_f, positive = "fast_growth")
+cm_object1 <- confusionMatrix(logit_class_prediction, data_holdout$fast_growth_f, positive = "fast_growth")
 cm_object1
 cm1 <- cm_object1$table
 cm1
@@ -424,7 +424,7 @@ save_fig("ch17-figure-2a-roc-discrete", output, "small")
 
 # Or with a fairly easy commands, we can plot, the
 # continuous ROC on holdout with Logit 4########################################
-roc_obj_holdout <- roc(data_holdout$default, data_holdout$best_logit_no_loss_pred, quiet = T)
+roc_obj_holdout <- roc(data_holdout$fast_growth, data_holdout$best_logit_no_loss_pred, quiet = T)
 # use aux function
 createRocPlot(roc_obj_holdout, "best_logit_no_loss_roc_plot_holdout")
 
@@ -584,7 +584,7 @@ save_tree_plot(rf_for_graph, "tree_plot", output, "small", tweak=1)
 #############
 
 data_for_graph <- data_train
-levels(data_for_graph$default_f) <- list("stay" = "no_fast_growth", "exit" = "fast_growth")
+levels(data_for_graph$fast_growth) <- list("stay" = "no_fast_growth", "exit" = "fast_growth")
 
 
 #################################################
@@ -702,7 +702,7 @@ expected_loss[["rf_p"]] <- mean(unlist(expected_loss_cv))
 
 rf_summary <- data.frame("CV RMSE" = CV_RMSE[["rf_p"]],
                          "CV AUC" = CV_AUC[["rf_p"]],
-                         "Avg of optimal thresholds" = best_thresholds[["rf_p"]],
+                         "Avg of optimal thresholds" = best_threshold[["rf_p"]],
                          "Threshold for Fold5" = best_threshold$threshold,
                          "Avg expected loss" = expected_loss[["rf_p"]],
                          "Expected loss for Fold5" = expected_loss_cv[[fold]])
@@ -719,18 +719,18 @@ createRocPlotWithOptimal(roc_obj, best_threshold, "rf_p_roc_plot")
 
 #Take model to holdout and estimate RMSE, AUC and expected loss
 rf_predicted_probabilities_holdout <- predict(rf_model_p, newdata = data_holdout, type = "prob")
-data_holdout$rf_p_prediction <- rf_predicted_probabilities_holdout[,"default"]
-RMSE(data_holdout$rf_p_prediction, data_holdout$default)
+data_holdout$rf_p_prediction <- rf_predicted_probabilities_holdout[,"fast_growth"]
+RMSE(data_holdout$rf_p_prediction, data_holdout$fast_growth)
 
 # ROC curve on holdout
-roc_obj_holdout <- roc(data_holdout$default, data_holdout[, "rf_p_prediction", drop=TRUE], quiet=TRUE)
+roc_obj_holdout <- roc(data_holdout$fast_growth, data_holdout[, "rf_p_prediction", drop=TRUE], quiet=TRUE)
 
 
 # AUC
 as.numeric(roc_obj_holdout$auc)
 
 # Get expected loss on holdout with optimal threshold
-holdout_treshold <- coords(roc_obj_holdout, x = best_thresholds[["rf_p"]] , input= "threshold",
+holdout_threshold <- coords(roc_obj_holdout, x = best_threshold[["rf_p"]] , input= "threshold",
                            ret="all", transpose = FALSE)
 expected_loss_holdout <- (holdout_threshold$fp*FP + holdout_threshold$fn*FN)/length(data_holdout$fast_growth)
 expected_loss_holdout

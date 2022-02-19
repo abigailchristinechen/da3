@@ -1,0 +1,345 @@
+---
+title: "DA3-A3"
+author: "Abigail Chen"
+output: 
+  pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Research Question
+
+The goal of this case study is to find out which are the fast growing companies using the **Bisnode firms data**(https://osf.io/3qyut/).  We will be building models to predict the fast growing firms. For this case study, we will be focus on the year 2012, with the cross-section of the companies to check whether they are fast growing or not.
+
+## Introduction
+
+The main business question this project seeks to answer is whether a firm has been growing fast in the consecutive two years. The classification model for prediction is built using various variables like the company features, balance sheets, HR details and other financial data. The case study focuses on the companies for the years from 2010 to 2015 zooming in on the firms that have high growth rate for two years from 2012 to 2014. to build a prediction model which can support individuals in their investment decisions in choosing between fast and non-fast growing firms.
+
+For this case study, we used 7 different models including OLS, LASSO, Random Forest and OLS logit
+To classify firms in the mentioned categories, a loss function which quantifies the consequences of the decisions that are driven by the prediction was required (Gabors, 2021). The loss function has two values, one is a loss due to the false negative and a loss due to the false positive. For this purpose we considered these features of the companies and build 7 different models which are OLS, LASSO, Random Forest and OLS Logit. The data comes from the Bisnode, a company that offers decision support in forms of digital business, marketing and credit information. 
+
+
+## Summary 
+
+We had to use various models, such as random forest, lasso, logit and ols. The best model was chosen to be 
+
+We used 7 different models including OLS, LASSO, Random Forest and OLS logit. As result of the above model the best selected model was Model 3 with RMSE of 0.361 and AUC was 0.6576 and the average expected loss was 0.3076. Moreover, we the best selected model for both services and Manufacture where we received the following results. The main aim of the project is to choose a prediction model which assists the decision makers on their investment in a company. Moreover, we also checked the selected our model performance for manufacturing and service industries. For the manufacturing industry the RMSE was 0.3771520, AUC was 0.6413224 and average expected loss was 0.3338673. For the service industry the RMSE is 0.344, AUC is	0.691 and the expected loss is	0.273
+
+
+## The Dataset
+After loading the dataset, we see that there are 287,829 observations with 48 variables. We will then be fixing the variables to the correct formats and work with the missing variables by imputation, dropping, munging and removing null variables. 
+
+
+## Cleaning of the Data 
+Here's a quick rundown for the data set, first, the structure of the data was analysed.  Then the proper data formats were changed.  The price has outyliers with a right skewed distribution. We took the ln and removed the outlier as well. Then we used the ln_price for modelling the dependent variable.
+
+
+## Label Engineering (Change the write up)
+Before start of modeling it is vital to define our _y_ variable and start with feature engineering. Based on the Business question we would to build a model to predict fast and non-fast growing firms. Thus, it is important to define what is considered as fast growing firm. For this purpose we consider CAGR, To start with label engineering we define _y_ variable which is whether a company is a fast growing or non-fast growing. Thus, we use compound annual growth rate (CAGR) to be 28% or more. The reason is that on average small or mid-size firms in their initial years have higher annual growth rate than the large companies. Thus, in order to consider a small or mid-size firm as fast growing, we expect it to have CAGR of 28% or more across two years. Thus we define fast growing firms if their CAGR sales value is 28% or more for this purpose we are focusing on the mid and small size firms we only kept the sales between 10 million and 1000 euros.
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#Please change dir to your own and unzip bisnode firm panel data in data/raw folder
+#Loading the libraries
+
+library(caret)
+library(cowplot)
+library(glmnet)
+library(gmodels) 
+library(haven)
+library(Hmisc)
+library(kableExtra)
+library(lspline)
+library(margins)
+library(ggplot2)
+library(modelsummary)
+library(partykit)
+library(pROC)
+library(purrr)
+library(ranger)
+library(rattle)
+library(rpart)
+library(rpart.plot)
+library(sandwich)
+library(skimr)
+library(ggthemes)
+library(viridis)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#Get working directory
+getwd()
+
+#Setting the directory----------------------------------------------------------
+dir <- "/Users/abigailchristinechen/da3/a3/"
+
+source("/Users/abigailchristinechen/da3/a3/da_helper_functions.R")
+source("/Users/abigailchristinechen/da3/theme_bg.R")
+#Assigning the directories 
+data_in <- paste0(dir,"data/raw/")
+data_out <- paste0(dir,"data/clean/")
+
+#Loading the data---------------------------------------------------------------
+data <- read_csv(paste0(data_in,"cs_bisnode_panel.csv"))
+
+#Checking the data
+#287,829 observations 
+#48 variables 
+
+glimpse(data)
+skim(data)
+
+to_filter <- sapply(data, function(x) sum(is.na(x)))
+sort(to_filter[to_filter > 0])
+
+#Drop the variables with too many NAs more than 200k and filter years between 2012-2014 
+#Check if there is full year balance sheet indicating they are not new firms
+#167,606 observations
+data <- data %>%
+  select(-c(COGS, finished_prod, net_dom_sales, net_exp_sales, wages, D)) %>%
+  #But you need to start with the panel for 2010-2015
+  filter(year >= 2010,
+         year <= 2015)
+
+#Label engineering--------------------------------------------------------------
+
+#Generate status_alive
+#Check the firm is still alive
+data  <- data %>%
+  mutate(status_alive = sales > 0 & !is.na(sales) %>%
+           as.numeric(.))
+
+#Create log sales and sales in million
+#We have negative sales values
+summary(data$sales)
+
+data <- data %>%
+  mutate(sales = ifelse(sales < 0, 1, sales),
+         ln_sales = ifelse(sales > 0, log(sales), 0),
+         sales_mil=sales/1000000,
+         sales_mil_log = ifelse(sales > 0, log(sales_mil), 0))
+
+data$sales_mil_log_sq <- (data$sales_mil_log)^2 
+
+#Checking and removing non-alive firms
+#128,355 observations
+data <- data %>%
+  filter(status_alive == 1) %>%
+  #look at firms below 10m euro revenue
+  filter(!(sales_mil > 10)) %>%
+  #look at firms above 1000 euros revenue
+  filter(!(sales_mil < 0.001))
+
+#Keep only firms with data for the 3 years
+#71,154 observations
+data <- data %>% group_by(comp_id) %>% filter(n() == 6)
+
+#Change in sales
+data <- data %>%
+  group_by(comp_id) %>%
+  mutate(d1_sales_mil_log = sales_mil_log - Lag(sales_mil_log, 1) ) %>%
+  ungroup()
+
+# replace w 0 for new firms + add dummy to capture it
+data <- data %>%
+  mutate(age = (year - founded_year) %>%
+           ifelse(. < 0, 0, .),
+         new = as.numeric(age <= 1) %>% #  (age could be 0,1 )
+           ifelse(balsheet_notfullyear == 1, 1, .),
+         d1_sales_mil_log = ifelse(new == 1, 0, d1_sales_mil_log),
+         new = ifelse(is.na(d1_sales_mil_log), 1, new),
+         d1_sales_mil_log = ifelse(is.na(d1_sales_mil_log), 0, d1_sales_mil_log))
+
+#54 variables
+data <- data %>%
+  mutate(flag_low_d1_sales_mil_log = ifelse(d1_sales_mil_log < -1.5, 1, 0),
+         flag_high_d1_sales_mil_log = ifelse(d1_sales_mil_log > 1.5, 1, 0),
+         d1_sales_mil_log_mod = ifelse(d1_sales_mil_log < -1.5, -1.5,
+                                       ifelse(d1_sales_mil_log > 1.5, 1.5, d1_sales_mil_log)),
+         d1_sales_mil_log_mod_sq = d1_sales_mil_log_mod^2)
+
+# CAGR sales change in the last 2 years
+# 55 variables
+data <- data %>%
+  group_by(comp_id) %>%
+  mutate(cagr_sales = ((lead(sales_mil,2) / sales_mil)^(1/2)-1)*100)
+
+#11,791 observations
+data <- data %>%
+  filter(year == 2012,
+         cagr_sales != is.na(cagr_sales),
+         cagr_sales <= 500)
+
+describe(data$cagr_sales)
+describe(data$comp_id)
+
+ggplot(data=data, aes(x=cagr_sales)) +
+  geom_histogram(aes(y = (..count..)/sum(..count..)), binwidth = 10, boundary=0,
+                 color = "black", fill = "deepskyblue4") +
+  coord_cartesian(xlim = c(-100, 200)) +
+  labs(x = "CAGR growth",y = "Percent")+
+  #scale_y_continuous(expand = c(0.00,0.00),limits=c(0, 0.15), breaks = seq(0, 0.15, by = 0.03), labels = scales::percent_format(1)) +
+  #scale_x_continuous(expand = c(0.00,0.00),limits=c(0,500), breaks = seq(0,500, 50)) +
+  theme_bw() 
+
+
+#Create fast growth dummy
+#56 variables
+data <- data %>%
+  group_by(comp_id) %>%
+  mutate(fast_growth = (cagr_sales > 50) %>%
+           as.numeric(.)) %>%
+  ungroup()
+
+describe(data$fast_growth)
+
+data <- data %>%
+  mutate(age = (year - founded_year))
+
+#Label engineering-----------------------------------------------------------END
+
+#Feature engineering------------------------------------------------------------
+
+
+#Change some industry category codes
+#57 variables
+data <- data %>%
+  mutate(ind2_cat = ind2 %>%
+           ifelse(. > 56, 60, .)  %>%
+           ifelse(. < 26, 20, .) %>%
+           ifelse(. < 55 & . > 35, 40, .) %>%
+           ifelse(. == 31, 30, .) %>%
+           ifelse(is.na(.), 99, .))
+
+table(data$ind2_cat)
+
+#Firm characteristics
+#67 variables
+data <- data %>%
+  mutate(age2 = age^2,
+         foreign_management = as.numeric(foreign >= 0.5),
+         gender_m = factor(gender, levels = c("female", "male", "mix")),
+         m_region_loc = factor(region_m, levels = c("Central", "East", "West")))
+```
+
+This histogram shows that the distribution of sales is skewed to the right.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+ggplot(data=data, aes(x=sales_mil)) +
+  geom_histogram(aes(y = (..count..)/sum(..count..)), binwidth = 0.1,
+                 color = "black", fill = "darkcyan") +
+  coord_cartesian(xlim = c(0, 5)) +
+  labs(x = "sales in million",y = "Percent", title = "Distribution of Sales")+
+  theme_wsj() 
+
+```
+
+While this histogram shows a normal distribtuion for the log of sales.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=data, aes(x=sales_mil_log)) +
+  geom_histogram(aes(y = (..count..)/sum(..count..)), binwidth = 0.25,
+                 color = "black", fill = "darkcyan") +
+  labs(x = "log sales in million",y = "Percent")+
+  ggtitle("Distribution of log Sales") +
+  theme_wsj() + scale_colour_wsj("colors6")
+```
+
+This histogram shows the normal distribution of CAGR.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=data, aes(x=cagr_sales)) +
+  geom_histogram(aes(y = (..count..)/sum(..count..)), binwidth = 10, boundary=0,
+                 color = "black", fill = "darkcyan") +
+  coord_cartesian(xlim = c(-100, 200)) +
+  ggtitle("Distribution of CAGR") +
+  labs(x = "CAGR growth",y = "Percent") +
+  theme_wsj() + scale_colour_wsj("colors6")
+```
+
+## Sample Design 
+
+The Bisnode data set contains 287829 observations and 48 variables. This project uses sample data from 2012 to 2014. However, the study was centred on the small and mid-size enterprises captured by 28% of their CAGR sales and companies which had sales between 10 million and 1000 euros in 2012. As a result, sample design concluded with 10462 observations and 117 variables. The main goal of the sample design is to reduce the impact of extreme values. Moreover, the sample design incorporated an alive status filter to ensure that all firms are still operating in the market. 
+
+## Feature Engineering
+
+The next task in the case study is feature engineering, which consists of selecting, cleaning and putting the _x_ variables, in proper forms for the model prediction. The variables have different characteristics such as the firm size, financial factors, human resource and others. The main thing about feature engineering deciding what functional forms of variables should be included. 
+
+
+The histogram shows the right skew for the Distribution of Current Assets.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot( data = data, aes( x = curr_assets ) ) +
+  geom_histogram( color = "black", fill = "darkcyan") +
+  theme(plot.title = element_text( size = 12L, face = "bold", hjust = 0.5 ) ) +
+  scale_x_continuous(limits = c(-1, 1000000)) +
+  scale_y_continuous(limits = c(0, 2800)) +
+  ylab("Count") +
+  xlab("Current Assets") +
+  ggtitle("Current assets") +
+  theme(legend.position = "top", panel.background = element_rect(fill = NA),
+        panel.border = element_blank(), axis.text=element_text(size=8), 
+        plot.title = element_text(size = 12L, face = "bold", hjust = 0.5) ) +
+  theme_wsj() + scale_colour_wsj("colors6") 
+
+```
+
+The histogram shows the right skew for the Distribution of Current Liabilities.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot( data = data, aes( x = curr_liab ) ) +
+  geom_histogram( color = "black", fill = "darkcyan") +
+  theme(plot.title = element_text( size = 12L, face = "bold", hjust = 0.5 ) ) +
+  scale_x_continuous(limits = c(-1, 1000000)) +
+  scale_y_continuous(limits = c(0, 2800)) +
+  ylab("Count") +
+  xlab("Current Liabilities") +
+  ggtitle("Current Liabiliries") +
+  labs( x='', y="Count", title= 'Current Liabilities') +
+  theme(legend.position = "top", panel.background = element_rect(fill = NA),
+        panel.border = element_blank(), axis.text=element_text(size=8), 
+        plot.title = element_text(size = 12L, face = "bold", hjust = 0.5) ) +
+  theme_wsj() + scale_colour_wsj("colors6") 
+```
+
+This histogram also shows the right skew for the Distribution of Inventories.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot( data = data, aes( x = inventories ) ) +
+  geom_histogram( color = "black", fill = "darkcyan") +
+  theme(plot.title = element_text( size = 12L, face = "bold", hjust = 0.5 ) ) +
+  scale_x_continuous(limits = c(0, 100000)) +
+  scale_y_continuous(limits = c(0, 2000)) +
+  ylab("Count") +
+  xlab("Inventory") +
+  ggtitle("Inventory") +
+  theme(legend.position = "top", panel.background = element_rect(fill = NA),
+        panel.border = element_blank(), axis.text=element_text(size=8), 
+        plot.title = element_text(size = 12L, face = "bold", hjust = 0.5) ) +
+  theme_wsj() + scale_colour_wsj("colors6") 
+```
+
+This histogram also shows the right skew for the Distribution of Extra Income.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot( data = data, aes( x = extra_inc ) ) +
+  geom_histogram( color = "black", fill = "darkcyan") +
+  theme(plot.title = element_text( size = 12L, face = "bold", hjust = 0.5 ) ) +
+  scale_x_continuous(limits = c(-1, 50000)) +
+  scale_y_continuous(limits = c(0, 200)) +
+  ylab("Count") +
+  xlab("") +
+  ggtitle("Extra Income") +
+  theme(legend.position = "top", panel.background = element_rect(fill = NA),
+        panel.border = element_blank(), axis.text=element_text(size=8), 
+        plot.title = element_text(size = 12L, face = "bold", hjust = 0.5) ) +
+  theme_wsj() + scale_colour_wsj("colors6") 
+```
+
+There are various ways to address such values. Based on the the Data Analysis book, we can transform the functions to its logarithmic form (ln), group the factor variables or use winsorization. In winsorization, we identify a threshold value for the various variables and substitute the value outside of the threshold with the threshold values itself and finally adding a flag variable. We can also make new variables based on the results of the distributions shown.  We can also create new columns for the various profit and loss variables.  We can also create a flag variable to select variables which cannot be less than 0.
+
+
+
+
+
+
+
+
+
+

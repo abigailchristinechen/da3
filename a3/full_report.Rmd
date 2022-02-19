@@ -1,7 +1,7 @@
 ---
 title: "DA3-A3"
 author: "Abigail Chen"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
